@@ -12,55 +12,58 @@ function parseJassDefineInfo(jassFile)
     // console.log(results);
     
     let makeInfo = [];
-    
-    results.forEach(result =>
-    {
-        // let lines = result.split(/[\r\n]+/gms);
-        // console.log(lines);
-    
-        let group = result.split(/ *public function /gms);
-        // console.log(group);
-    
-        let _yaml = group[0].replace(/(<ui>|<\/ui>)/g, "");
-        let _func = group[1];
 
-        // console.log(_yaml);
-    
-        let _yamlData = jsyaml.safeLoad(_yaml);
-    
-        if (_yamlData.args)
+    if (results)
+    {
+        results.forEach(result =>
         {
-            _yamlData.args.forEach((arg, index) =>
+            // let lines = result.split(/[\r\n]+/gms);
+            // console.log(lines);
+        
+            let group = result.split(/ *public function /gms);
+            // console.log(group);
+        
+            let _yaml = group[0].replace(/(<ui>|<\/ui>)/g, "");
+            let _func = group[1];
+    
+            // console.log(_yaml);
+        
+            let _yamlData = jsyaml.safeLoad(_yaml);
+        
+            if (_yamlData.args)
             {
-                let info = arg.match(/[^\(\) ]+/gms);
-                // console.log('info', info);
-                _yamlData.args[index] = info;
-            });
-        }
-        // console.log(_yamlData);
-    
-        let _funcData = {};
-        let _funcMatch = _func.match(/([^\(\)]+)/gms);
-        _funcData.name = _funcMatch[0];
-        if (_funcMatch[1] != null)
-        {
-            let _argsInfo = _funcMatch[1].split(/, /g);
-            _argsInfo.forEach((info, index) =>
+                _yamlData.args.forEach((arg, index) =>
+                {
+                    let info = arg.match(/[^\(\) ]+/gms);
+                    // console.log('info', info);
+                    _yamlData.args[index] = info;
+                });
+            }
+            // console.log(_yamlData);
+        
+            let _funcData = {};
+            let _funcMatch = _func.match(/([^\(\)]+)/gms);
+            _funcData.name = _funcMatch[0];
+            if (_funcMatch[1] != null)
             {
-                _argsInfo[index] = info.split(" ");
+                let _argsInfo = _funcMatch[1].split(/, /g);
+                _argsInfo.forEach((info, index) =>
+                {
+                    _argsInfo[index] = info.split(" ");
+                });
+                _funcData.args = _argsInfo;
+            }
+            if (_funcMatch[2] != null)
+            {
+                _funcData.return = _funcMatch[2].replace(" -> ", "");
+            }
+        
+            makeInfo.push({
+                yaml: _yamlData,
+                func: _funcData,
             });
-            _funcData.args = _argsInfo;
-        }
-        if (_funcMatch[2] != null)
-        {
-            _funcData.return = _funcMatch[2].replace(" -> ", "");
-        }
-    
-        makeInfo.push({
-            yaml: _yamlData,
-            func: _funcData,
         });
-    });
+    }
     
     // console.log(makeInfo);
     
