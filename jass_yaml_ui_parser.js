@@ -5,7 +5,7 @@ function parseJassDefineInfo(jassFile)
 {
     let msg = fs.readFileSync(jassFile).toString();
 
-    msg = msg.replace(/^ +\/\/ /gm, "");
+    msg = msg.replace(/^ *\/\/ /gm, "");
     // console.log(msg);
     
     let results = msg.match(/<ui>.+?<\/ui>[\r\n]+([^\r\n]+)/gms);
@@ -23,6 +23,8 @@ function parseJassDefineInfo(jassFile)
     
         let _yaml = group[0].replace(/(<ui>|<\/ui>)/g, "");
         let _func = group[1];
+
+        // console.log(_yaml);
     
         let _yamlData = jsyaml.safeLoad(_yaml);
     
@@ -77,7 +79,10 @@ function parseJassDefineInfo(jassFile)
 }
 function makeTriggerInfo(defineInfo)
 {
-    let content = "";
+    let content = {
+        action: "",
+        call: "",
+    };
 
     defineInfo.forEach(info =>
     {
@@ -94,29 +99,71 @@ function makeTriggerInfo(defineInfo)
 
         let inject = {};
         inject.head = 
-`[${name}]
-title = "${title}"
-description = "${desc}"
-category = ${cate}`;
+            `[${name}]\r\n` +
+            `title = "${title}"\r\n` +
+            `description = "${desc}"\r\n` +
+            `category = ${cate}`;
         if (returnType)
         {
             inject.head += `\r\nreturns = ${returnType}`;
         }
 
         inject.args = "";
-        args.forEach(arg =>
+        if (args)
         {
-            let _type = arg[0];
-            let _defaultValue = arg[1];
-            inject.args += 
-`[[.args]]
-type = ${_type}
-default = "${_defaultValue}"\r\n`;
-        });
+            args.forEach(arg =>
+                {
+                    let _type = arg[0];
+                    let _defaultValue = arg[1];
+                    inject.args += 
+                        `[[.args]]\r\n` +
+                        `type = ${_type}\r\n` +
+                        `default = "${_defaultValue}"\r\n`;
+                });
+        }
 
-        content += `${inject.head}
-${inject.args}\r\n`;
+        let result = 
+            `${inject.head}\r\n` +
+            `${inject.args}\r\n`;
+
+        if (returnType)
+        {
+            content.call += result;
+        }
+        else
+        {
+            content.action += result;
+        }
     });
+    return content;
+}
+function makeTriggerInfoFromFile(jassFile)
+{
+    return makeTriggerInfo(parseJassDefineInfo(jassFile));
+}
+function makeTriggerInfoFromFiles(jassFiles)
+{
+    let contentList = [];
+    jassFiles.forEach(jassFile =>
+    {
+        contentList.push(makeTriggerInfoFromFile(jassFile));
+    });
+
+    let actionList = [];
+    let callList = [];
+    contentList.forEach(content =>
+    {
+        actionList.push(content.action);
+        callList.push(content.call);
+    });
+
+    let content = {};
+    content.action = actionList.join("\r\n");
+    content.call = callList.join("\r\n");
+
+    // console.log(content.action);
+    // console.log(content.call);
+
     return content;
 }
 
@@ -126,4 +173,6 @@ ${inject.args}\r\n`;
 module.exports = {
     parseJassDefineInfo,
     makeTriggerInfo,
+    makeTriggerInfoFromFile,
+    makeTriggerInfoFromFiles,
 }

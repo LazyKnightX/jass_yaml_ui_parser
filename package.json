@@ -1,0 +1,15 @@
+{
+  "name": "jass_yaml_ui_parser",
+  "version": "0.0.1",
+  "description": "一个用于读取YAML格式储存的Jass动作、函数的触发器UI配置数据的工具，可以自动读取function名字和返回值，并对应生成到action.txt、call.txt中。",
+  "main": "jass_yaml_ui_parser.js",
+  "dependencies": {
+    "js-yaml": "^3.13.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lazy Knight (LazyKnightX)",
+  "license": "GPL-3.0"
+}
